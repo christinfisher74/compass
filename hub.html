@@ -790,7 +790,37 @@ nav { background:var(--forest); padding:0 1.25rem; display:flex; align-items:cen
 
 <script>
 // STATE
-let state = {
+const STORAGE_KEY = 'fsc_hub_state';
+const DISMISSED_KEY = 'fsc_dismissed_tasks';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+  } catch(e) { return null; }
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getDismissed() {
+  try {
+    const saved = localStorage.getItem(DISMISSED_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch(e) { return []; }
+}
+
+function addDismissed(id) {
+  try {
+    const list = getDismissed();
+    if (!list.includes(id)) list.push(id);
+    localStorage.setItem(DISMISSED_KEY, JSON.stringify(list));
+  } catch(e) {}
+}
+
+const savedState = loadState();
+let state = savedState || {
   name: 'Christin', biz: 'Feminine Strength Co.', niche: '', tagline: 'Done starting over.',
   email: 'digitalchristin@gmail.com', ig: '@christin_fisher', tiktok: '@restliftrepeat', site: '',
   primaryColor: '#1E3329', accentColor: '#C4A882',
@@ -924,17 +954,33 @@ function closeModal(id, e) {
 function approveTask(id, msg) {
   const el = document.getElementById(id);
   if (el) { el.style.opacity='0.4'; el.style.pointerEvents='none'; setTimeout(()=>el.remove(),300); }
+  addDismissed(id);
   state.pendingCount = Math.max(0, state.pendingCount - 1);
-  document.getElementById('pending-count').textContent = state.pendingCount;
-  showToast(msg || 'Task approved.');
+  saveState();
+  const pc = document.getElementById('pending-count');
+  if (pc) pc.textContent = state.pendingCount;
+  showToast(msg || 'Task approved and saved.');
 }
 
 function rejectTask(id) {
   const el = document.getElementById(id);
   if (el) { el.style.opacity='0.4'; el.style.pointerEvents='none'; setTimeout(()=>el.remove(),300); }
+  addDismissed(id);
   state.pendingCount = Math.max(0, state.pendingCount - 1);
-  document.getElementById('pending-count').textContent = state.pendingCount;
-  showToast('Task rejected.');
+  saveState();
+  const pc = document.getElementById('pending-count');
+  if (pc) pc.textContent = state.pendingCount;
+  showToast('Task rejected and saved.');
+}
+
+function hideDismissedTasks() {
+  const dismissed = getDismissed();
+  dismissed.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const pc = document.getElementById('pending-count');
+  if (pc) pc.textContent = state.pendingCount;
 }
 
 function switchEmailTab(tab, btn) {
@@ -1027,6 +1073,7 @@ function generateBriefing() {
     showToast('Briefing updated.');
   }, 1800);
 }
+hideDismissedTasks();
 </script>
 </body>
 </html>
