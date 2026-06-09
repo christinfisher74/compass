@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Compass — Feminine Strength Co.</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --forest: #1E3329;
+    --taupe: #C4A882;
+    --olive: #7A9E7E;
+    --cream: #FAF7F2;
+    --dark-taupe: #8B6F4E;
+    --light-olive: #edf3ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--forest);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    color: var(--cream);
+  }
+
+  /* ── SCREENS ─────────────────────────────── */
+  .screen {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    animation: fadeUp 0.4s ease forwards;
+  }
+
+  .screen.active { display: flex; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LOADING ─────────────────────────────── */
+  .loading-screen {
+    background: var(--forest);
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .loading-dots {
+    display: flex; gap: 8px;
+  }
+
+  .loading-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--taupe);
+    animation: bounce 1.2s infinite;
+  }
+
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-8px); opacity: 1; }
+  }
+
+  /* ── COVER / HERO ────────────────────────── */
+  .hero {
+    background: var(--forest);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 64px 40px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,168,130,0.08);
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(196,168,130,0.05);
+  }
+
+  .hero-top {}
+
+  .hero-eyebrow {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(196,168,130,0.6);
+    margin-bottom: 32px; display: block;
+  }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 80px; font-weight: 300;
+    line-height: 0.9; letter-spacing: -0.025em;
+    color: var(--cream); margin-bottom: 32px;
+  }
+
+  .hero h1 em {
+    font-style: italic; color: var(--taupe); display: block;
+  }
+
+  .hero-rule {
+    width: 48px; height: 1px;
+    background: rgba(196,168,130,0.35);
+    margin-bottom: 24px;
+  }
+
+  .hero-sub {
+    font-size: 14px; font-weight: 300;
+    color: rgba(250,247,242,0.6);
+    line-height: 1.75; max-width: 360px;
+    margin-bottom: 40px;
+  }
+
+  .hero-features {
+    display: flex; flex-direction: column;
+    gap: 10px; margin-bottom: 48px;
+  }
+
+  .feature-item {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: rgba(250,247,242,0.65);
+  }
+
+  .feature-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%; background: var(--olive);
+    flex-shrink: 0;
+  }
+
+  .hero-pricing {
+    background: rgba(196,168,130,0.08);
+    border: 1px solid rgba(196,168,130,0.15);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+  }
+
+  .pricing-trial {
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--olive); margin-bottom: 8px; display: block;
+  }
+
+  .pricing-main {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px; font-weight: 300;
+    color: var(--cream); line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .pricing-main em {
+    font-style: italic; color: var(--taupe);
+  }
+
+  .pricing-sub {
+    font-size: 12px; color: rgba(250,247,242,0.4);
+    line-height: 1.5;
+  }
+
+  /* ── AUTH FORMS ──────────────────────────── */
+  .auth-section {
+    background: var(--cream);
+    padding: 48px 40px 60px;
+    flex: 1;
+  }
+
+  .auth-tabs {
+    display: flex; gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid rgba(30,51,41,0.1);
+  }
+
+  .auth-tab {
+    flex: 1; padding: 12px 8px;
+    text-align: center;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: #bbb; cursor: pointer; background: none;
+    border: none; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.2s;
+  }
+
+  .auth-tab.active {
+    color: var(--forest);
+    border-bottom-color: var(--taupe);
+  }
+
+  .auth-form { display: none; }
+  .auth-form.active { display: block; }
+
+  .form-group { margin-bottom: 16px; }
+
+  .form-label {
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: #aaa; margin-bottom: 6px; display: block;
+  }
+
+  .form-input {
+    width: 100%; padding: 14px 16px;
+    border: 1px solid rgba(30,51,41,0.12);
+    background: white; color: var(--forest);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 300;
+    transition: border-color 0.2s; border-radius: 0;
+    -webkit-appearance: none;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--taupe);
+  }
+
+  .form-input::placeholder { color: #ccc; }
+
+  .form-error {
+    font-size: 12px; color: #c0392b;
+    margin-top: 6px; display: none;
+    line-height: 1.4;
+  }
+
+  .form-error.show { display: block; }
+
+  .form-success {
+    font-size: 13px; color: var(--olive);
+    margin-top: 8px; display: none;
+    line-height: 1.5;
+  }
+
+  .form-success.show { display: block; }
+
+  /* ── BUTTONS ─────────────────────────────── */
+  .btn-primary {
+    background: var(--forest); color: var(--cream);
+    border: none; padding: 16px 24px; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover { background: #152520; }
+
+  .btn-primary:disabled {
+    background: rgba(30,51,41,0.2);
+    cursor: not-allowed;
+  }
+
+  .btn-taupe {
+    background: var(--taupe); color: var(--forest);
+    border: none; padding: 16px 24px; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-taupe:hover { background: var(--dark-taupe); color: var(--cream); }
+
+  .btn-ghost {
+    background: none; color: #999;
+    border: 1px solid rgba(30,51,41,0.12);
+    padding: 14px 24px; width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    margin-top: 10px;
+  }
+
+  .btn-ghost:hover { border-color: var(--forest); color: var(--forest); }
+
+  /* ── SUBSCRIPTION GATE ───────────────────── */
+  .subscribe-screen {
+    background: var(--forest);
+    justify-content: space-between;
+    padding: 64px 40px 48px;
+  }
+
+  .subscribe-screen h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px; font-weight: 300;
+    color: var(--cream); line-height: 1;
+    margin-bottom: 20px; letter-spacing: -0.01em;
+  }
+
+  .subscribe-screen h2 em {
+    font-style: italic; color: var(--taupe);
+  }
+
+  .subscribe-screen p {
+    font-size: 14px; color: rgba(250,247,242,0.6);
+    line-height: 1.75; margin-bottom: 32px;
+    max-width: 380px;
+  }
+
+  .subscribe-card {
+    background: rgba(196,168,130,0.08);
+    border: 1px solid rgba(196,168,130,0.2);
+    padding: 28px 24px; margin-bottom: 20px;
+  }
+
+  .subscribe-card-trial {
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--olive); margin-bottom: 12px; display: block;
+  }
+
+  .subscribe-card-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 40px; font-weight: 300;
+    color: var(--cream); line-height: 1; margin-bottom: 6px;
+  }
+
+  .subscribe-card-price em {
+    font-style: italic; color: var(--taupe);
+    font-size: 28px;
+  }
+
+  .subscribe-card-note {
+    font-size: 12px; color: rgba(250,247,242,0.4);
+    line-height: 1.5;
+  }
+
+  .subscribe-includes {
+    list-style: none; margin-bottom: 32px;
+  }
+
+  .subscribe-includes li {
+    font-size: 13px; color: rgba(250,247,242,0.65);
+    padding: 8px 0; border-bottom: 1px solid rgba(250,247,242,0.06);
+    padding-left: 20px; position: relative; line-height: 1.4;
+  }
+
+  .subscribe-includes li:last-child { border-bottom: none; }
+
+  .subscribe-includes li::before {
+    content: '→'; position: absolute; left: 0;
+    color: var(--taupe); font-size: 11px; top: 10px;
+  }
+
+  .sign-out-link {
+    text-align: center; padding-top: 20px;
+    font-size: 11px; color: rgba(250,247,242,0.25);
+    cursor: pointer; letter-spacing: 0.1em;
+    text-decoration: underline;
+  }
+
+  .sign-out-link:hover { color: rgba(250,247,242,0.5); }
+
+  /* ── DIVIDER ─────────────────────────────── */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0;
+  }
+
+  .divider-line {
+    flex: 1; height: 1px;
+    background: rgba(30,51,41,0.1);
+  }
+
+  .divider-text {
+    font-size: 11px; color: #ccc;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  /* ── FORGOT PASSWORD ─────────────────────── */
+  .forgot-link {
+    font-size: 11px; color: #bbb;
+    cursor: pointer; text-align: right;
+    display: block; margin-top: 4px;
+    text-decoration: underline;
+  }
+
+  .forgot-link:hover { color: var(--forest); }
+
+  /* ── TERMS ───────────────────────────────── */
+  .terms-note {
+    font-size: 11px; color: #bbb;
+    text-align: center; line-height: 1.6;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ LOADING ══════════════════════════════════════ -->
+<div class="screen active loading-screen" id="screen-loading">
+  <div class="loading-dots">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+  </div>
+</div>
+
+<!-- ═══ HERO + AUTH ══════════════════════════════════ -->
+<div class="screen" id="screen-auth">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-top">
+      <span class="hero-eyebrow">Feminine Strength Co.</span>
+      <h1>Compass<br><em>by Christin.</em></h1>
+      <div class="hero-rule"></div>
+      <p class="hero-sub">Your hormone health companion — built for women navigating perimenopause, menopause, and every season of midlife.</p>
+
+      <div class="hero-features">
+        <div class="feature-item"><div class="feature-dot"></div>Daily energy check-in and personalized guidance</div>
+        <div class="feature-item"><div class="feature-dot"></div>Cycle-phase programming and movement support</div>
+        <div class="feature-item"><div class="feature-dot"></div>Guided breathwork and nervous system tools</div>
+        <div class="feature-item"><div class="feature-dot"></div>Symptom tracking and monthly spotlights</div>
+      </div>
+
+      <div class="hero-pricing">
+        <span class="pricing-trial">7 days free — then</span>
+        <div class="pricing-main"><em>$14.99</em> / month</div>
+        <div class="pricing-sub">Cancel anytime. No commitment.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Forms -->
+  <div class="auth-section">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('signup')">Start Free Trial</button>
+    </div>
+
+    <!-- Login Form -->
+    <div class="auth-form active" id="form-login">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-password" placeholder="Your password" autocomplete="current-password">
+        <span class="forgot-link" onclick="showForgotPassword()">Forgot password?</span>
+      </div>
+      <div class="form-error" id="login-error"></div>
+      <button class="btn-primary" id="btn-login" onclick="handleLogin()">Sign In</button>
+      <div class="terms-note">Don't have an account? <span style="text-decoration:underline; cursor:pointer;" onclick="switchAuthTab('signup')">Start your free trial</span></div>
+    </div>
+
+    <!-- Signup Form -->
+    <div class="auth-form" id="form-signup">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="signup-email" placeholder="you@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="signup-password" placeholder="Create a password (min 8 characters)" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="signup-confirm" placeholder="Confirm your password" autocomplete="new-password">
+      </div>
+      <div class="form-error" id="signup-error"></div>
+      <div class="form-success" id="signup-success"></div>
+      <button class="btn-taupe" id="btn-signup" onclick="handleSignup()">Start 7-Day Free Trial</button>
+      <div class="terms-note">By signing up you agree to the 7-day free trial. After trial, $14.99/month. Cancel anytime.</div>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div class="auth-form" id="form-forgot">
+      <p style="font-size:14px; color:#666; margin-bottom:20px; line-height:1.6;">Enter your email and we'll send you a link to reset your password.</p>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="forgot-email" placeholder="you@email.com">
+      </div>
+      <div class="form-error" id="forgot-error"></div>
+      <div class="form-success" id="forgot-success"></div>
+      <button class="btn-primary" onclick="handleForgotPassword()">Send Reset Link</button>
+      <button class="btn-ghost" onclick="switchAuthTab('login')">Back to Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUBSCRIPTION GATE ═════════════════════════════ -->
+<div class="screen" id="screen-subscribe">
+  <div class="subscribe-screen">
+    <div>
+      <span style="font-size:10px; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color:rgba(196,168,130,0.6); margin-bottom:16px; display:block;">Welcome back</span>
+      <h2>Start your<br><em>free trial.</em></h2>
+      <p>You have an account but no active subscription. Start your 7-day free trial to access Compass — cancel anytime, no charge until day 8.</p>
+
+      <div class="subscribe-card">
+        <span class="subscribe-card-trial">7 days free — then</span>
+        <div class="subscribe-card-price"><em>$14.99</em> / month</div>
+        <div class="subscribe-card-note">Cancel anytime before day 7 and you won't be charged.</div>
+      </div>
+
+      <ul class="subscribe-includes">
+        <li>Daily energy check-in and personalized session guidance</li>
+        <li>Cycle-phase programming — Regular, Peri, Menopause, Endo tracks</li>
+        <li>Guided breathwork and nervous system support</li>
+        <li>Symptom tracking and monthly spotlight library</li>
+        <li>Cancel anytime from your account settings</li>
+      </ul>
+
+      <div class="form-error" id="subscribe-error"></div>
+
+      <button class="btn-taupe" id="btn-subscribe" onclick="handleSubscribe()">Start 7-Day Free Trial — $14.99/mo after</button>
+      <div class="sign-out-link" onclick="handleSignOut()">Sign out</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIGURATION — REPLACE WITH YOUR REAL KEYS ───────
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+  const STRIPE_PUBLISHABLE_KEY = 'YOUR_STRIPE_PUBLISHABLE_KEY_HERE';
+  const COMPASS_PRICE_ID = 'YOUR_COMPASS_PRICE_ID_HERE';
+  // The URL of your actual Compass app — update this to your app path
+  const COMPASS_APP_URL = './app.html';
+  // ─────────────────────────────────────────────────────
+
+  // Initialize Supabase
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+  // ── INIT ───────────────────────────────────────────────
+  async function init() {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+
+      if (!session) {
+        // No session — show auth screen
+        showScreen('screen-auth');
+        return;
+      }
+
+      // Has session — check subscription
+      const hasSubscription = await checkSubscription(session.user.id);
+
+      if (hasSubscription) {
+        // Active subscription — load the app
+        loadApp();
+      } else {
+        // No subscription — show subscribe screen
+        showScreen('screen-subscribe');
+      }
+    } catch (err) {
+      console.error('Init error:', err);
+      showScreen('screen-auth');
+    }
+  }
+
+  // ── CHECK SUBSCRIPTION ─────────────────────────────────
+  async function checkSubscription(userId) {
+    try {
+      // Check Supabase for active subscription record
+      const { data, error } = await sb
+        .from('subscriptions')
+        .select('status, current_period_end')
+        .eq('user_id', userId)
+        .single();
+
+      if (error || !data) return false;
+
+      // Check if subscription is active or in trial
+      const isActive = data.status === 'active' || data.status === 'trialing';
+      const notExpired = new Date(data.current_period_end) > new Date();
+
+      return isActive && notExpired;
+    } catch {
+      return false;
+    }
+  }
+
+  // ── LOAD APP ───────────────────────────────────────────
+  function loadApp() {
+    // Redirect to the actual Compass app
+    window.location.href = COMPASS_APP_URL;
+  }
+
+  // ── SCREEN NAVIGATION ──────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => {
+      s.classList.remove('active');
+      s.style.display = 'none';
+    });
+    const s = document.getElementById(id);
+    s.classList.add('active');
+    s.style.display = 'flex';
+    window.scrollTo(0, 0);
+  }
+
+  // ── AUTH TABS ──────────────────────────────────────────
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+
+    if (tab === 'login') {
+      document.querySelectorAll('.auth-tab')[0].classList.add('active');
+      document.getElementById('form-login').classList.add('active');
+    } else if (tab === 'signup') {
+      document.querySelectorAll('.auth-tab')[1].classList.add('active');
+      document.getElementById('form-signup').classList.add('active');
+    } else if (tab === 'forgot') {
+      document.getElementById('form-forgot').classList.add('active');
+    }
+  }
+
+  function showForgotPassword() {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+    document.getElementById('form-forgot').classList.add('active');
+  }
+
+  // ── LOGIN ──────────────────────────────────────────────
+  async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+    const btn = document.getElementById('btn-login');
+
+    errorEl.classList.remove('show');
+
+    if (!email || !password) {
+      showError('login-error', 'Please enter your email and password.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showError('login-error', getAuthErrorMessage(error.message));
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+        return;
+      }
+
+      // Check subscription
+      const hasSubscription = await checkSubscription(data.user.id);
+
+      if (hasSubscription) {
+        loadApp();
+      } else {
+        showScreen('screen-subscribe');
+      }
+    } catch (err) {
+      showError('login-error', 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    }
+  }
+
+  // ── SIGNUP ─────────────────────────────────────────────
+  async function handleSignup() {
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm').value;
+    const btn = document.getElementById('btn-signup');
+
+    document.getElementById('signup-error').classList.remove('show');
+    document.getElementById('signup-success').classList.remove('show');
+
+    if (!email || !password || !confirm) {
+      showError('signup-error', 'Please fill in all fields.');
+      return;
+    }
+
+    if (password.length < 8) {
+      showError('signup-error', 'Password must be at least 8 characters.');
+      return;
+    }
+
+    if (password !== confirm) {
+      showError('signup-error', 'Passwords don\'t match.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    try {
+      const { data, error } = await sb.auth.signUp({ email, password });
+
+      if (error) {
+        showError('signup-error', getAuthErrorMessage(error.message));
+        btn.disabled = false;
+        btn.textContent = 'Start 7-Day Free Trial';
+        return;
+      }
+
+      // Account created — now redirect to Stripe checkout
+      btn.textContent = 'Redirecting to checkout...';
+      await startStripeCheckout(email);
+
+    } catch (err) {
+      showError('signup-error', 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Start 7-Day Free Trial';
+    }
+  }
+
+  // ── SUBSCRIBE (existing account) ──────────────────────
+  async function handleSubscribe() {
+    const btn = document.getElementById('btn-subscribe');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to checkout...';
+
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      await startStripeCheckout(session?.user?.email);
+    } catch (err) {
+      showError('subscribe-error', 'Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Start 7-Day Free Trial — $14.99/mo after';
+    }
+  }
+
+  // ── STRIPE CHECKOUT ────────────────────────────────────
+  async function startStripeCheckout(email) {
+    try {
+      // For GitHub Pages deployment, use Stripe Payment Links
+      // Replace YOUR_STRIPE_PAYMENT_LINK with your Stripe payment link for Compass
+      // Create it in Stripe Dashboard → Payment Links → Create Link
+      // Set it to the Compass $14.99/mo price with 7-day trial
+      window.location.href = 'YOUR_STRIPE_PAYMENT_LINK_HERE';
+    } catch (err) {
+      console.error('Stripe error:', err);
+      showError('subscribe-error', 'Could not start checkout. Please try again.');
+    }
+  }
+
+  // ── FORGOT PASSWORD ────────────────────────────────────
+  async function handleForgotPassword() {
+    const email = document.getElementById('forgot-email').value.trim();
+
+    if (!email) {
+      showError('forgot-error', 'Please enter your email address.');
+      return;
+    }
+
+    try {
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+
+      if (error) {
+        showError('forgot-error', 'Could not send reset email. Please try again.');
+        return;
+      }
+
+      document.getElementById('forgot-success').textContent = 'Reset link sent — check your email.';
+      document.getElementById('forgot-success').classList.add('show');
+    } catch {
+      showError('forgot-error', 'Something went wrong. Please try again.');
+    }
+  }
+
+  // ── SIGN OUT ───────────────────────────────────────────
+  async function handleSignOut() {
+    await sb.auth.signOut();
+    showScreen('screen-auth');
+    switchAuthTab('login');
+  }
+
+  // ── HELPERS ────────────────────────────────────────────
+  function showError(id, message) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.add('show');
+  }
+
+  function getAuthErrorMessage(msg) {
+    if (msg.includes('Invalid login')) return 'Email or password is incorrect.';
+    if (msg.includes('Email not confirmed')) return 'Please check your email and confirm your account first.';
+    if (msg.includes('already registered')) return 'An account with this email already exists. Try signing in instead.';
+    if (msg.includes('weak')) return 'Password is too weak. Use at least 8 characters.';
+    return 'Something went wrong. Please try again.';
+  }
+
+  // ── LISTEN FOR AUTH CHANGES ────────────────────────────
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const hasSubscription = await checkSubscription(session.user.id);
+      if (hasSubscription) {
+        loadApp();
+      }
+    }
+    if (event === 'SIGNED_OUT') {
+      showScreen('screen-auth');
+    }
+  });
+
+  // ── START ──────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>
