@@ -539,7 +539,7 @@
   const STRIPE_PUBLISHABLE_KEY = 'pk_live_51KYEd4QmKLh1w2061gAhF6qr7qP3kAqf85gbQqfRVGKy0WgT8C8aTvFxbjtSf93tjaGxKO1VbJlgfwi2B2d2RbwN00MHTgvj2g';
   const COMPASS_PRICE_ID = 'prod_UepBAHu9pi7nes';
   // The URL of your actual Compass app — update this to your app path
-  const COMPASS_APP_URL = './app.html';
+  const COMPASS_APP_URL = './app.html.html';
   // ─────────────────────────────────────────────────────
 
   // Initialize Supabase
@@ -750,7 +750,7 @@
       // Replace YOUR_STRIPE_PAYMENT_LINK with your Stripe payment link for Compass
       // Create it in Stripe Dashboard → Payment Links → Create Link
       // Set it to the Compass $14.99/mo price with 7-day trial
-      window.location.href = 'YOUR_STRIPE_PAYMENT_LINK_HERE';
+      window.location.href = 'https://buy.stripe.com/dRm8wRa6E1RXam67cVcEw0k';
     } catch (err) {
       console.error('Stripe error:', err);
       showError('subscribe-error', 'Could not start checkout. Please try again.');
